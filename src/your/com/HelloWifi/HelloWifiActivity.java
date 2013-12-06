@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
@@ -21,10 +22,17 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,10 +48,18 @@ public class HelloWifiActivity extends Activity {
 	Button buttonCheck;
 	List<ScanResult> scanResultList;
 	List<WifiConfiguration> wifiConfigList;
-	WifiInfo wifiInfo;
+	//WifiInfo wifiInfo;
 	Button buttonWrite;
 	EditText editText;
-	private String fileName;
+	private String location;
+	public static final int MENU_CLOSE = Menu.FIRST+1;
+	//Spinner spin;
+	private String networkSSID;
+	private ArrayList<ArrayList> WifiSum = new ArrayList<ArrayList>();
+	private ArrayList<ArrayList> WifiFre = new ArrayList<ArrayList>();
+	private ArrayList<ArrayList> WifiRSSI = new ArrayList<ArrayList>();
+	private ArrayList<ArrayList> WifiLink = new ArrayList<ArrayList>();
+	private ArrayList<ArrayList> wifiInfo = new ArrayList<ArrayList>();
 	
 	
 	
@@ -66,24 +82,7 @@ public class HelloWifiActivity extends Activity {
         wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         
         //Get WiFi status
-        WifiInfo info = wifi.getConnectionInfo();
-        text.append("\n\nWiFi Status: " + info.toString());
-        
-        //List availabe networks
-        List<WifiConfiguration> configs = wifi.getConfiguredNetworks();
-        for (WifiConfiguration config : configs) {
-        	text.append("\n\n" + config.toString());
-        }
-        text.append("\n");
-        
-        /*
-        //Register Broadcast Receiver
-        if (receiver == null)
-        	receiver = new WiFiScanReceiver(this);
-        registerReceiver(receiver, new IntentFilter(
-        		WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        Log.d(TAG, "onCreate()");
-        */
+        //text.append("\n\nWiFi Status: " + info.toString());
     }
     
     public void startingWifi(View v) {
@@ -118,26 +117,55 @@ public class HelloWifiActivity extends Activity {
     
     public void scanWifi(View v) {
     	int i = 0;
+    	int flag = 0;
+    	int connectNum = 0;
+    	wifiInfo.add(new ArrayList());
+    	
+    	for (int j = 0; j < 2; j++)
+    		wifiInfo.get(connectNum).add(new ArrayList());
+    	for (i = 0; i < 20; i++){
     	wifi.startScan();
     	scanResultList = wifi.getScanResults();
     	wifiConfigList = wifi.getConfiguredNetworks();
-		text.append("\n----------------------------------------------------------\n");
-    	text.append(scanResultList.size() + " scan result available:\n");
-    	for (i = 0; i < scanResultList.size(); i++){
-    		text.append("scanResult" + i + ":\n"+ scanResultList.get(i).toString() + "\n");
+		//text.append("\n----------------------------------------------------------\n");
+    	//text.append(scanResultList.size() + " scan result available:\n");
+    	//for (i = 0; i < scanResultList.size(); i++){
+    		//text.append("scanResult" + i + ":\n"+ scanResultList.get(i).toString() + "\n");
     		//Toast.makeText(this, "Wifi scan result" + (i) + ":\n" + scanResultList.get(i).toString(), Toast.LENGTH_LONG).show();
+    	//}
+    	
+    	if (!wifiInfo.get(connectNum).get(0).equals(wifi.getConnectionInfo().getBSSID()))
+			wifiInfo.get(connectNum).get(0).add(wifi.getConnectionInfo().getBSSID());
+		wifiInfo.get(connectNum).get(1).add(wifi.getConnectionInfo().getRssi());
+		wifiInfo.get(connectNum).get(2).add(wifi.getConnectionInfo().getLinkSpeed());
+		for (ScanResult result : scanResultList) {
+			
+			if(result.SSID.equals("Tsinghua"))
+			{
+				for(ArrayList l : WifiSum)
+				{
+					if(l.get(0).equals(result.BSSID))
+					{
+						l.add(result.level);
+						flag = 1;
+					}
+				}
+				if(flag == 0)
+				{
+					flag = WifiSum.size();
+					WifiSum.add(new ArrayList());
+					WifiSum.get(flag).add(result.BSSID);
+					WifiSum.get(flag).add(result.frequency);
+					WifiSum.get(flag).add("\nLevel: " + result.level);
+				}
+				flag = 0;
+			}
+		}
+    	
+    	SystemClock.sleep(500);
     	}
-		text.append("\n----------------------------------------------------------\n");
-		text.append("wifi configuration:\n");
-    	for (i=0; i<wifiConfigList.size(); i++){
-    		text.append("wifiConfig" + i + ":\n" + wifiConfigList.get(i).toString() + "\n");
-    		//Toast.makeText(this, "Wifi config result" + (i) + ":\n" + wifiConfigList.get(i).toString() , Toast.LENGTH_LONG).show();
-    	}
-    	
-    	
-    	wifiInfo = wifi.getConnectionInfo();
-    	text.append("wifiinfo = :\n" + wifiInfo.toString() + "\n\n\n");
-    	
+    	for (ArrayList list : wifiInfo)
+    		text.append(list.toString());
     	
     }
     
@@ -145,6 +173,7 @@ public class HelloWifiActivity extends Activity {
     	final String SD_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
     	final String FILE_PATH = "/WifiInfo";
     	final File path = new File(SD_PATH + FILE_PATH);
+    	final String fileName = "WifiData.txt";
         editText = new EditText(this);
 
     	AlertDialog editDialog = new AlertDialog.Builder(this).create();
@@ -152,20 +181,23 @@ public class HelloWifiActivity extends Activity {
     	editDialog.setButton( AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				fileName = editText.getText().toString() + ".txt";
+				location = editText.getText().toString();
 				File file = new File(SD_PATH + FILE_PATH, fileName);
 		    	if (!path.exists())
 		    		path.mkdir();
 		    	try {
-		    		//InputStream is = (InputStream) text.getText();
 		    		FileOutputStream os = new FileOutputStream(file,false);
-		    		//byte[] data = new byte[is.available()];
-		            //is.read(data);
-		            os.write(text.getText().toString().getBytes());
-		            //is.close();
+		    		os.write("-------------------------------------------------------------------------------------\n".getBytes());
+		            os.write((location + "\n").getBytes());
+		            os.write(("共有" + WifiSum.size() + "个搜索结果:\n").getBytes());
+		            for(ArrayList l : WifiSum)
+					{
+						os.write((l.toString()+"\n").getBytes());
+					}
+		            os.write("---------------------------------------------------------------------------------\n\n".getBytes());
 		            os.close();
-		            Toast.makeText(getApplicationContext(), fileName + "已保存", Toast.LENGTH_SHORT).show();
+		            WifiSum.clear();
+		            Toast.makeText(getApplicationContext(), location + "已保存", Toast.LENGTH_SHORT).show();
 		    	}
 		    	catch (IOException e) {
 		            // Unable to create file, likely because external storage is
@@ -179,7 +211,6 @@ public class HelloWifiActivity extends Activity {
     	editDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
 				dialog.cancel();
 			}
 		});
@@ -200,9 +231,7 @@ public class HelloWifiActivity extends Activity {
     		dialog.setButton("OK", new DialogInterface.OnClickListener() {
 			
     			public void onClick(DialogInterface dialog, int which) {
-    				// TODO Auto-generated method stub
     				dialog.cancel();
-    				
     			}
     		});
     		dialog.setCancelable(false);
@@ -212,42 +241,84 @@ public class HelloWifiActivity extends Activity {
     		dialog.show();
     	}
     	else {
+    		wifi.startScan();
+	    	scanResultList = wifi.getScanResults();
+	    	ArrayList<String> wifiList = new ArrayList<String>();
+	    	boolean flag = false;
+	    	for (ScanResult result : scanResultList) {
+	    		flag = false;
+	    		for (String item : wifiList) {
+	    			if (item.equals(result.SSID)){
+	    				flag = true;
+	    				Log.d("item", "the same");
+	    				break;
+	    				
+	    			}
+	    		}
+	    		if (flag == false){
+	    			wifiList.add(result.SSID);
+	    			Log.d("Spinner", result.SSID);
+	    		}
+	    		
+	    		
+	    	}
+	    	
+	    final String[] wifiString = new String[wifiList.size()];
+	    wifiList.toArray(wifiString);
+	    networkSSID = wifiString[0];
+		AlertDialog.Builder netDialog = new AlertDialog.Builder(this);
+		netDialog.setSingleChoiceItems(wifiString, 0, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				networkSSID = wifiString[id];
+			}
+		});
+		netDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+		});
+		netDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+		    	WifiConfiguration wc = new WifiConfiguration();
+				wc.SSID = "\"" + networkSSID + "\"";
+				wc.status = WifiConfiguration.Status.ENABLED;
+		    	wc.priority = 1;
+		    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+		    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+		    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+		    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+		    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+		    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+		    	wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+		    	wc.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+		    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+		    	
+		    	while (!wifi.isWifiEnabled())
+		    		;
+		    	int res = wifi.addNetwork(wc);
+		    	Log.d("WifiPreference", "add Network returned " + res );
+		    	boolean b = wifi.enableNetwork(res, true);
+		    	Log.d("WifiPreference", "enableNetwork returned " + b );
+		    	if (b) {
+		    		while (wifi.getConnectionInfo().getSSID() == null) {
+		    			;
+		    		}
+		    		Toast.makeText(getApplicationContext(), "connected to " + networkSSID, Toast.LENGTH_SHORT).show();
+		    		text.append("\n----------------------------------------------------------\n");
+		    		text.append("connected to:\n" + wifi.getConnectionInfo() + "\n");
+		    	}
+			}
+		});
+		netDialog.setTitle("请输入想要连接的wifi名称：");
+		netDialog.show();
+		
     	/*
-    	for (i=0;i<scanResultList.size();i++){
-    		Log.d("capabilities", scanResultList.get(i).capabilities);
-    		if (scanResultList.get(i).capabilities != "[WPA-EAP-CCMP][WPA2-EAP-CCMP]"){
-    			Log.d("true", scanResultList.get(i).capabilities);
-    			break;
-    		}
-    	}
-    	Log.d("i", "i = " + i );
-    	wifi_local.disconnect();
-    	ScanResult sr = scanResultList.get(i);
-    	*/
-    	//wifi.setWifiEnabled(true);
-    	//Toast.makeText(this, "startingwifi" + wifi.getWifiState(), Toast.LENGTH_SHORT).show();
-    	String networkSSID = "library";
-    	wc.SSID = "\"" + networkSSID + "\"";
-    	
     	//wc.preSharedKey  = "";
     	//wc.hiddenSSID = false;
-    	wc.status = WifiConfiguration.Status.ENABLED;
-    	wc.priority = 1;
-    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-    	wc.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-    	wc.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-    	wc.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-    	wc.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
     	
-    	/*
     	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
     	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
-    	*/
-    	/*
+    	
     	List<WifiConfiguration> list = wifi.getConfiguredNetworks();
     	for( WifiConfiguration item : list ) {
     	    if(item.SSID != null && item.SSID.equals("\"" + sr.SSID + "\"")) {
@@ -258,36 +329,28 @@ public class HelloWifiActivity extends Activity {
     	         break;
     	    }           
     	 }
-    	*/
+    	
     	
     	//boolean es = wifi.saveConfiguration();
         //Log.d("WifiPreference", "saveConfiguration returned " + es );
-    	while (!wifi.isWifiEnabled())
-    		;
-    	int res = wifi.addNetwork(wc);
-    	Log.d("WifiPreference", "add Network library returned " + res );
-    	boolean b = wifi.enableNetwork(res, true);        
-    	Log.d("WifiPreference", "enableNetwork library returned " + b );
-    	if (b) {
-    		while (wifi.getConnectionInfo().getSSID() == null) {
-    			;
-    		}
-    		text.append("\n----------------------------------------------------------\n");
-    		text.append("connected to:\n" + wifi.getConnectionInfo() + "\n");
+    	*/
     	}
-    	String networkSSID2 = "Tsinghua";
-    	wc.SSID = "\"" + networkSSID2 + "\"";
-    	res = wifi.addNetwork(wc);
-    	Log.d("WifiPreference", "add Network Tsinghua returned " + res );
-    	b = wifi.enableNetwork(res, true);        
-    	Log.d("WifiPreference", "enableNetwork Tsinghua returned " + b );
-    	if (b) {
-    		while (wifi.getConnectionInfo().getSSID() == null)
-    			;
-    		text.append("connected to:\n" + wifi.getConnectionInfo() + "\n");
+    }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	menu.add(Menu.NONE, MENU_CLOSE, Menu.NONE, "close");
+    	return super.onCreateOptionsMenu(menu);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	switch (item.getItemId()) {
+    	case MENU_CLOSE:
+    		//finish();
+    		super.finish();
+    		return true;
     	}
-    	
-    	}
+    	return super.onOptionsItemSelected(item);
     }
 
 }

@@ -54,21 +54,33 @@
 	    
 	    
   </LinearLayout>
-
+  <LinearLayout 
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+  	android:layout_height="wrap_content"
+    >
   <Button
-        android:id="@+id/buttonWrite"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:onClick="write"
-        android:text="write to file" />
+	android:id="@+id/buttonWrite"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:onClick="write"
+	android:text="write to file"
+	android:layout_weight="1"
+	
+	 />
   <Button 
 	android:id="@+id/buttonconnect"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
 	android:onClick="connect"
 	android:text="connect network"
-	/>
+	android:layout_weight="1"
+	/>  
       
+      
+  </LinearLayout>
+  
+       
   <ScrollView 
     android:id="@+id/ScrollView01"
     android:layout_width="wrap_content" 
@@ -77,7 +89,7 @@
       android:layout_width="fill_parent"
       android:layout_height="wrap_content" 
       android:id="@+id/text"
-      android:text="WiFiDemo" />
+      android:text="HelloWifi" />
   </ScrollView>
 
 
