@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical" 
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  >
+  <LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+  	android:layout_height="wrap_content"
+  	>
+    <Button
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/buttonStart"
+    android:text="StartWifi"
+    android:onClick="startingWifi"
+    android:layout_weight="1"
+    android:gravity="center_horizontal"
+    />
+
+    <Button
+    android:id="@+id/buttonStop"
+    android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:layout_weight="1"
+	android:gravity="center_horizontal"
+	android:onClick="stoppingWifi"
+	android:text="StopWifi"
+	/>
+
+  </LinearLayout>
+  <LinearLayout 
+	android:orientation="horizontal"
+    android:layout_width="fill_parent"
+  	android:layout_height="wrap_content"
+	>
+  <Button
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/buttonCheck"
+    android:text="CheckWifi"
+    android:onClick="checkingWifi"
+	android:layout_weight="1"
+      />
+  <Button
+	android:id="@+id/buttonScan"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:onClick="scanWifi"
+	android:text="Scan"
+	android:layout_weight="1"
+	 />	    
+	    
+	    
+  </LinearLayout>
+  <LinearLayout 
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+  	android:layout_height="wrap_content"
+    >
+  <Button
+	android:id="@+id/buttonWrite"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:onClick="write"
+	android:text="write to file"
+	android:layout_weight="1"
+	
+	 />
+  <Button 
+	android:id="@+id/buttonconnect"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:onClick="connect"
+	android:text="connect network"
+	android:layout_weight="1"
+	/>  
+      
+      
+  </LinearLayout>
+  
+       
+  <ScrollView 
+    android:id="@+id/ScrollView01"
+    android:layout_width="wrap_content" 
+    android:layout_height="wrap_content">
+    <TextView 
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content" 
+      android:id="@+id/text"
+      android:text="HelloWifi" />
+  </ScrollView>
+
+
+</LinearLayout>
