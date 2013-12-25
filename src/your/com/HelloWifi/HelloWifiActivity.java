@@ -56,9 +56,6 @@ public class HelloWifiActivity extends Activity {
 	//Spinner spin;
 	private String networkSSID;
 	private ArrayList<ArrayList> WifiSum = new ArrayList<ArrayList>();
-	private ArrayList<ArrayList> WifiFre = new ArrayList<ArrayList>();
-	private ArrayList<ArrayList> WifiRSSI = new ArrayList<ArrayList>();
-	private ArrayList<ArrayList> WifiLink = new ArrayList<ArrayList>();
 	private ArrayList<ArrayList> wifiInfo = new ArrayList<ArrayList>();
 	
 	
@@ -119,10 +116,9 @@ public class HelloWifiActivity extends Activity {
     	int i = 0;
     	int flag = 0;
     	int connectNum = 0;
-    	wifiInfo.add(new ArrayList());
-    	
-    	for (int j = 0; j < 2; j++)
-    		wifiInfo.get(connectNum).add(new ArrayList());
+    	wifiInfo.clear();
+    	for (int j = 0; j < 4; j++)
+    		wifiInfo.add(new ArrayList());
     	for (i = 0; i < 20; i++){
     	wifi.startScan();
     	scanResultList = wifi.getScanResults();
@@ -134,10 +130,14 @@ public class HelloWifiActivity extends Activity {
     		//Toast.makeText(this, "Wifi scan result" + (i) + ":\n" + scanResultList.get(i).toString(), Toast.LENGTH_LONG).show();
     	//}
     	
-    	if (!wifiInfo.get(connectNum).get(0).equals(wifi.getConnectionInfo().getBSSID()))
-			wifiInfo.get(connectNum).get(0).add(wifi.getConnectionInfo().getBSSID());
-		wifiInfo.get(connectNum).get(1).add(wifi.getConnectionInfo().getRssi());
-		wifiInfo.get(connectNum).get(2).add(wifi.getConnectionInfo().getLinkSpeed());
+    	if (wifiInfo.get(0).equals(new ArrayList())) {
+    		Log.d("equal", "equal");
+			wifiInfo.get(0).add(wifi.getConnectionInfo().getBSSID());
+			wifiInfo.get(1).add(wifi.getConnectionInfo().getMacAddress());
+    	}
+    	
+		wifiInfo.get(2).add(wifi.getConnectionInfo().getRssi());
+		wifiInfo.get(3).add(wifi.getConnectionInfo().getLinkSpeed());
 		for (ScanResult result : scanResultList) {
 			
 			if(result.SSID.equals("Tsinghua"))
@@ -166,6 +166,7 @@ public class HelloWifiActivity extends Activity {
     	}
     	for (ArrayList list : wifiInfo)
     		text.append(list.toString());
+    	buttonScan.setEnabled(false);
     	
     }
     
@@ -187,17 +188,24 @@ public class HelloWifiActivity extends Activity {
 		    		path.mkdir();
 		    	try {
 		    		FileOutputStream os = new FileOutputStream(file,false);
-		    		os.write("-------------------------------------------------------------------------------------\n".getBytes());
+		    		os.write("\n\n-------------------------------------------------------------------------------------\n".getBytes());
 		            os.write((location + "\n").getBytes());
 		            os.write(("共有" + WifiSum.size() + "个搜索结果:\n").getBytes());
 		            for(ArrayList l : WifiSum)
 					{
 						os.write((l.toString()+"\n").getBytes());
 					}
-		            os.write("---------------------------------------------------------------------------------\n\n".getBytes());
+		            os.write("---------------------------------------------------------------------------------\n".getBytes());
+		            os.write("wifiInfo:\n".getBytes());
+		            os.write(("BSSID:" + wifiInfo.get(0).toString()).getBytes());
+		            os.write(("\nMAC:" + wifiInfo.get(1).toString()).getBytes());
+		            os.write(("\nRSSI:" + wifiInfo.get(2).toString()).getBytes());
+		            os.write(("\nLink Speed:" + wifiInfo.get(3).toString()).getBytes());
 		            os.close();
 		            WifiSum.clear();
+		            wifiInfo.clear();
 		            Toast.makeText(getApplicationContext(), location + "已保存", Toast.LENGTH_SHORT).show();
+		        	buttonScan.setEnabled(true);
 		    	}
 		    	catch (IOException e) {
 		            // Unable to create file, likely because external storage is
