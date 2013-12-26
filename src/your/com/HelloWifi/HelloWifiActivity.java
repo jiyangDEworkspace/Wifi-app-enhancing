@@ -5,13 +5,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -37,10 +40,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class HelloWifiActivity extends Activity {
-	//private static final String TAG = "HelloWifiActivity";
 	WifiManager wifi;
 	WifiManager wifi_local;
-	//BroadcastReceiver receiver;
 	TextView text;
 	Button buttonScan;
 	Button buttonStart;
@@ -48,16 +49,20 @@ public class HelloWifiActivity extends Activity {
 	Button buttonCheck;
 	List<ScanResult> scanResultList;
 	List<WifiConfiguration> wifiConfigList;
-	//WifiInfo wifiInfo;
 	Button buttonWrite;
 	EditText editText;
+	EditText et; //有一个EditEext是随时创建的，怕弄混了
 	private String location;
-	public static final int MENU_CLOSE = Menu.FIRST+1;
-	//Spinner spin;
+	public static final int MENU_CLOSE = Menu.FIRST + 3;
+	public static final int MENU_CHANGE = Menu.FIRST + 1;
+	public static final int MENU_EDIT = Menu.FIRST + 2;
 	private String networkSSID;
 	private ArrayList<ArrayList> WifiSum = new ArrayList<ArrayList>();
 	private ArrayList<ArrayList> wifiInfo = new ArrayList<ArrayList>();
-	
+	Calendar time = Calendar.getInstance();
+	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+	String currentTime = timestamp.toString();
+	public int loopTime;
 	
 	
     /** Called when the activity is first created. */
@@ -73,13 +78,23 @@ public class HelloWifiActivity extends Activity {
         buttonStop = (Button) findViewById(R.id.buttonStop);
         buttonCheck = (Button) findViewById(R.id.buttonCheck);
         buttonWrite = (Button) findViewById(R.id.buttonWrite);
+        et = (EditText) findViewById(R.id.et);
         editText = new EditText(this);
         
+        loopTime = 105;
         //Setup WiFi
         wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         
-        //Get WiFi status
-        //text.append("\n\nWiFi Status: " + info.toString());
+        //Check if run first time
+        try {
+			InputStream in = getApplicationContext().openFileInput("key.txt");
+        }
+        catch (java.io.FileNotFoundException e) {
+        	 StoreFile storeFile = new StoreFile();
+        	 storeFile.method(HelloWifiActivity.this);
+        	 storeFile.write(HelloWifiActivity.this);
+        }
+        
     }
     
     public void startingWifi(View v) {
@@ -119,120 +134,98 @@ public class HelloWifiActivity extends Activity {
     	wifiInfo.clear();
     	for (int j = 0; j < 4; j++)
     		wifiInfo.add(new ArrayList());
-    	for (i = 0; i < 20; i++){
-    	wifi.startScan();
-    	scanResultList = wifi.getScanResults();
-    	wifiConfigList = wifi.getConfiguredNetworks();
-		//text.append("\n----------------------------------------------------------\n");
-    	//text.append(scanResultList.size() + " scan result available:\n");
-    	//for (i = 0; i < scanResultList.size(); i++){
-    		//text.append("scanResult" + i + ":\n"+ scanResultList.get(i).toString() + "\n");
-    		//Toast.makeText(this, "Wifi scan result" + (i) + ":\n" + scanResultList.get(i).toString(), Toast.LENGTH_LONG).show();
-    	//}
-    	
-    	if (wifiInfo.get(0).equals(new ArrayList())) {
-    		Log.d("equal", "equal");
-			wifiInfo.get(0).add(wifi.getConnectionInfo().getBSSID());
-			wifiInfo.get(1).add(wifi.getConnectionInfo().getMacAddress());
+    	for (i = 0; i < loopTime; i++){
+    		wifi.startScan();
+        	scanResultList = wifi.getScanResults();
+        	wifiConfigList = wifi.getConfiguredNetworks();
+        	if (i < 5)
+        		continue;
+        	if (wifiInfo.get(0).equals(new ArrayList())) {
+        		Log.d("equal", "equal");
+    			wifiInfo.get(0).add(wifi.getConnectionInfo().getBSSID());
+    			wifiInfo.get(1).add(wifi.getConnectionInfo().getMacAddress());
+        	}
+        	
+    		wifiInfo.get(2).add(wifi.getConnectionInfo().getRssi());
+    		wifiInfo.get(3).add(wifi.getConnectionInfo().getLinkSpeed());
+    		for (ScanResult result : scanResultList) {
+    			
+    			if(result.SSID.equals("Tsinghua"))
+    			{
+    				for(ArrayList l : WifiSum)
+    				{
+    					if(l.get(0).equals(result.BSSID))
+    					{
+    						l.add(result.level);
+    						flag = 1;
+    					}
+    				}
+    				if(flag == 0)
+    				{
+    					flag = WifiSum.size();
+    					WifiSum.add(new ArrayList());
+    					WifiSum.get(flag).add(result.BSSID);
+    					WifiSum.get(flag).add(result.level);
+    				}
+    				flag = 0;
+    			}
+    		}
+        	
+        	SystemClock.sleep(500);
     	}
-    	
-		wifiInfo.get(2).add(wifi.getConnectionInfo().getRssi());
-		wifiInfo.get(3).add(wifi.getConnectionInfo().getLinkSpeed());
-		for (ScanResult result : scanResultList) {
-			
-			if(result.SSID.equals("Tsinghua"))
-			{
-				for(ArrayList l : WifiSum)
-				{
-					if(l.get(0).equals(result.BSSID))
-					{
-						l.add(result.level);
-						flag = 1;
-					}
-				}
-				if(flag == 0)
-				{
-					flag = WifiSum.size();
-					WifiSum.add(new ArrayList());
-					WifiSum.get(flag).add(result.BSSID);
-					WifiSum.get(flag).add(result.frequency);
-					WifiSum.get(flag).add("\nLevel: " + result.level);
-				}
-				flag = 0;
-			}
-		}
-    	
-    	SystemClock.sleep(500);
-    	}
-    	for (ArrayList list : wifiInfo)
-    		text.append(list.toString());
+    	//for (ArrayList list : wifiInfo)
+    		//text.append(list.toString());
     	buttonScan.setEnabled(false);
+    	
+    	//以下是查找教室的代码
+    	Data sample = new Data();
+    	sample  = Calculate.getSampleData(WifiSum);
+    	Building chosenBuildings = new Building();
+    	ArrayList<Data> chosenDatas = new ArrayList<Data>();
+    	//Data chosenData = new Data();
+    	ArrayList<Data> chosenData = new ArrayList<Data>();
+    	
+    	chosenBuildings = School.chooseFromBuildings(sample.BSSIDStrongest[0]);
+    	text.append( "\nThe strongest BSSID is " + sample.BSSIDStrongest[0]+"\n");
+    	text.append("教学楼：您在 " + chosenBuildings.name+"\n");
+    	//text.append("您在 " + School.test_chooseFromBuildings(sample.BSSIDStrongest[0])+"\n");
+    	chosenDatas = chosenBuildings.firstChooseFromDatas(sample);
+    	text.append("初选：您在 ");
+    	for(i = 0; i<chosenDatas.size(); i++)
+    	{
+    		text.append(i + ": " + chosenDatas.get(i).place + "	");
+    	}
+    	chosenData = chosenBuildings.secondChooseFromDatas(sample,chosenDatas);
+    	text.append("\n精选：您在 ");
+    	for(i = 0; i<chosenData.size(); i++)
+    	{
+    		text.append(i + ": " + chosenData.get(i).place + "	");
+    	}
+
     	
     }
     
     public void write(View v) {
-    	final String SD_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
-    	final String FILE_PATH = "/WifiInfo";
-    	final File path = new File(SD_PATH + FILE_PATH);
-    	final String fileName = "WifiData.txt";
-        editText = new EditText(this);
-
-    	AlertDialog editDialog = new AlertDialog.Builder(this).create();
-    	editDialog.setView(editText);
-    	editDialog.setButton( AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				location = editText.getText().toString();
-				File file = new File(SD_PATH + FILE_PATH, fileName);
-		    	if (!path.exists())
-		    		path.mkdir();
-		    	try {
-		    		FileOutputStream os = new FileOutputStream(file,false);
-		    		os.write("\n\n-------------------------------------------------------------------------------------\n".getBytes());
-		            os.write((location + "\n").getBytes());
-		            os.write(("共有" + WifiSum.size() + "个搜索结果:\n").getBytes());
-		            for(ArrayList l : WifiSum)
-					{
-						os.write((l.toString()+"\n").getBytes());
-					}
-		            os.write("---------------------------------------------------------------------------------\n".getBytes());
-		            os.write("wifiInfo:\n".getBytes());
-		            os.write(("BSSID:" + wifiInfo.get(0).toString()).getBytes());
-		            os.write(("\nMAC:" + wifiInfo.get(1).toString()).getBytes());
-		            os.write(("\nRSSI:" + wifiInfo.get(2).toString()).getBytes());
-		            os.write(("\nLink Speed:" + wifiInfo.get(3).toString()).getBytes());
-		            os.close();
-		            WifiSum.clear();
-		            wifiInfo.clear();
-		            Toast.makeText(getApplicationContext(), location + "已保存", Toast.LENGTH_SHORT).show();
-		        	buttonScan.setEnabled(true);
-		    	}
-		    	catch (IOException e) {
-		            // Unable to create file, likely because external storage is
-		            // not currently mounted.
-		            Log.w("ExternalStorage", "Error writing " + file, e);
-		        }
-				
-				
-			}
-		});
-    	editDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
-			
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.cancel();
-			}
-		});
-    	editDialog.setCancelable(false);
-    	editDialog.setMessage("Please enter a finename");
-    	editDialog.show();
+    	location = et.getText().toString();
+    	if (location.equals(""))
+    		Toast.makeText(getApplicationContext(), "请输入地点", Toast.LENGTH_SHORT).show();
+    	else {
+    	Write writeFunction = new Write();
+    	writeFunction.Write(WifiSum, wifiInfo, HelloWifiActivity.this, location);    	
+    	
+    	WifiSum.clear();
+        wifiInfo.clear();
+        Toast.makeText(getApplicationContext(), location + "已保存", Toast.LENGTH_SHORT).show();
+        buttonScan.setEnabled(true);
+        Log.d("flag", "ok");
+    	}
+    	
     	
     }
     
     public void connect(View v) {
     	int i;
-    	//wifi_local = (WifiManager) getSystemService(Context.WIFI_SERVICE);
     	wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-    	//Toast.makeText(this, "startingwifi" + wifi.getWifiState(), Toast.LENGTH_SHORT).show();
     	WifiConfiguration wc = new WifiConfiguration();
     	if (!wifi.isWifiEnabled()) {
     		AlertDialog dialog = new AlertDialog.Builder(this).create();
@@ -320,34 +313,14 @@ public class HelloWifiActivity extends Activity {
 		netDialog.setTitle("请输入想要连接的wifi名称：");
 		netDialog.show();
 		
-    	/*
-    	//wc.preSharedKey  = "";
-    	//wc.hiddenSSID = false;
-    	
-    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-    	wc.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
-    	
-    	List<WifiConfiguration> list = wifi.getConfiguredNetworks();
-    	for( WifiConfiguration item : list ) {
-    	    if(item.SSID != null && item.SSID.equals("\"" + sr.SSID + "\"")) {
-    	         wifi_local.disconnect();
-    	         wifi_local.enableNetwork(item.networkId, true);
-    	         wifi_local.reconnect();                
-
-    	         break;
-    	    }           
-    	 }
-    	
-    	
-    	//boolean es = wifi.saveConfiguration();
-        //Log.d("WifiPreference", "saveConfiguration returned " + es );
-    	*/
     	}
     }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	menu.add(Menu.NONE, MENU_CLOSE, Menu.NONE, "close");
+    	menu.add(Menu.NONE, MENU_CHANGE, Menu.NONE, "Change");
+    	menu.addSubMenu(Menu.NONE, MENU_EDIT, Menu.NONE, "edit");
     	return super.onCreateOptionsMenu(menu);
     }
     @Override
@@ -357,6 +330,32 @@ public class HelloWifiActivity extends Activity {
     		//finish();
     		super.finish();
     		return true;
+    	case MENU_CHANGE:
+    	{
+    		AlertDialog loopDialog = new AlertDialog.Builder(this).create();
+    		editText = new EditText(this);
+    		loopDialog.setView(editText);
+    		loopDialog.setButton(Dialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+			
+    			public void onClick(DialogInterface dialog, int which) {
+    				loopTime = Integer.parseInt(editText.getText().toString());
+    			}
+    		});
+    		
+    		loopDialog.setButton(Dialog.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			});
+			
+    		loopDialog.setCancelable(false);
+    		loopDialog.setTitle("Caution");
+    		loopDialog.setMessage("choose scan time");
+    		//dialog.setView(editText);
+    		loopDialog.show();
+    		}
+    		return true;
+    		
     	}
     	return super.onOptionsItemSelected(item);
     }
