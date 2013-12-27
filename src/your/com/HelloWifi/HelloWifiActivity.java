@@ -9,8 +9,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
+
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -18,6 +20,7 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -25,7 +28,10 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +41,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -52,17 +59,31 @@ public class HelloWifiActivity extends Activity {
 	Button buttonWrite;
 	EditText editText;
 	EditText et; //有一个EditEext是随时创建的，怕弄混了
+	int ButtonStatus = 0; //表示按钮的状态
 	private String location;
 	public static final int MENU_CLOSE = Menu.FIRST + 3;
 	public static final int MENU_CHANGE = Menu.FIRST + 1;
 	public static final int MENU_EDIT = Menu.FIRST + 2;
+	public static final int MENU_HELP = Menu.FIRST + 4;
 	private String networkSSID;
 	private ArrayList<ArrayList> WifiSum = new ArrayList<ArrayList>();
 	private ArrayList<ArrayList> wifiInfo = new ArrayList<ArrayList>();
 	Calendar time = Calendar.getInstance();
 	Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 	String currentTime = timestamp.toString();
-	public int loopTime;
+	public static int loopTime;
+	//String help = getResources().getString(R.string.hello);
+	private String help = "1.to edit key, choose 'edit' in menu.\n" +
+			"2.send 'key' to your phone to start wifi locating.\n" +
+			"3.send 'key.gps' to your phone to start GPS locating.\n" +
+			"4.send 'key.ring' to make your phone ring in the loudest sound possible. (notice: the ring tone is phone's default ring tone)\n" +
+			"5.need further help, please send email to jedichen121@yahoo.com";
+	
+	//private String function = this.getString(R.string.function);
+	private ProgressBar progressBar;
+	private int status = 0;
+	private Handler handler;
+	
 	
 	
     /** Called when the activity is first created. */
@@ -72,18 +93,22 @@ public class HelloWifiActivity extends Activity {
         setContentView(R.layout.main);
         
         // Setup UI
-        text = (TextView) findViewById(R.id.text);
+        //text = (TextView) findViewById(R.id.text);
         buttonScan = (Button) findViewById(R.id.buttonScan);
         buttonStart = (Button) findViewById(R.id.buttonStart);
         buttonStop = (Button) findViewById(R.id.buttonStop);
         buttonCheck = (Button) findViewById(R.id.buttonCheck);
         buttonWrite = (Button) findViewById(R.id.buttonWrite);
         et = (EditText) findViewById(R.id.et);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        //progressBar.setMax(100);
         editText = new EditText(this);
-        
-        loopTime = 105;
+        text = (TextView) findViewById(R.id.tv);
+        text.setMovementMethod(ScrollingMovementMethod.getInstance());
+        loopTime = 700;
         //Setup WiFi
         wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        progressBar.setMax(loopTime);
         
         //Check if run first time
         try {
@@ -91,18 +116,37 @@ public class HelloWifiActivity extends Activity {
         }
         catch (java.io.FileNotFoundException e) {
         	 StoreFile storeFile = new StoreFile();
-        	 storeFile.method(HelloWifiActivity.this);
-        	 storeFile.write(HelloWifiActivity.this);
+        	 storeFile.method(HelloWifiActivity.this, true);
+        	 //storeFile.write(HelloWifiActivity.this);
         }
-        
+        /*
+        Intent it = new Intent(HelloWifiActivity.this, Scan.class);
+        Bundle bundle=new Bundle();
+        bundle.putString("receipt", "This is from MainActivity!");
+        it.putExtras(bundle);       // it.putExtra(“test”, "shuju”);
+        startActivity(it);
+        */
     }
     
     public void startingWifi(View v) {
-    	wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		wifi.setWifiEnabled(true);
-		System.out.println("wifi state --->" + wifi.getWifiState());
-		Toast.makeText(this, "startingwifi" + wifi.getWifiState(), Toast.LENGTH_SHORT).show();
-		text.append("startingwifi" + wifi.getWifiState() + "\n");
+    	if(ButtonStatus == 0){
+    		wifi.setWifiEnabled(true);
+    		System.out.println("wifi state --->" + wifi.getWifiState());
+    		Toast.makeText(this, "startingwifi" + wifi.getWifiState(), Toast.LENGTH_SHORT).show();
+    		//text.append("startingwifi" + wifi.getWifiState() + "\n");
+    		//text.append(wifi.getScanResults().toString());
+    		buttonStart.setText("turn off");
+    		ButtonStatus = 1;
+    	}
+    	else if(ButtonStatus == 1) {
+    		wifi.setWifiEnabled(false);
+        	System.out.println("wifi state --->" + wifi.getWifiState());
+    		Toast.makeText(this, "stoppingwifi" + wifi.getWifiState(), Toast.LENGTH_SHORT).show();
+    		//text.append("stoppingwifi" + wifi.getWifiState() + "\n");
+    		buttonStart.setText("turn on");
+    		ButtonStatus = 0;
+    	}
+    	
     	
     }
     
@@ -127,29 +171,72 @@ public class HelloWifiActivity extends Activity {
 		
     }
     
-    public void scanWifi(View v) {
+    public void doScan() {
     	int i = 0;
-    	int flag = 0;
-    	int connectNum = 0;
-    	wifiInfo.clear();
-    	for (int j = 0; j < 4; j++)
-    		wifiInfo.add(new ArrayList());
+    	
+    	
+    	//以下是查找教室的代码
+    	if(WifiSum.size()<1)
+    	{
+    		text.append( "抱歉,您所在的地点无定位所需wifi！\n" + WifiSum.size());
+    	}
+    	else
+    	{
+	    	text.append( WifiSum.get(0)+"\n");
+	    	Data sample = new Data();
+	    	sample  = Calculate.getSampleData(WifiSum);
+	    	Building chosenBuildings = new Building();
+	    	ArrayList<Data> chosenDatas = new ArrayList<Data>();
+	    	//Data chosenData = new Data();
+	    	ArrayList<Data> chosenData = new ArrayList<Data>();
+	    	
+	    	chosenBuildings = School.chooseFromBuildings(sample.BSSIDStrongest[0]);
+	    	if(chosenBuildings.name == null)
+	    	{
+	    		text.append( "抱歉！您所在的地点不在数据库中！\n");
+	    	}
+	    	else{
+	    		//text.append( "\nThe strongest BSSID is " + sample.BSSIDStrongest[0]+"\n");
+	       		text.append("教学楼：您在 " + chosenBuildings.name+"\n");
+	       		//text.append("您在 " + School.test_chooseFromBuildings(sample.BSSIDStrongest[0])+"\n");
+	       		chosenDatas = chosenBuildings.firstChooseFromDatas(sample);
+	       		if(chosenDatas.isEmpty())
+	       		{
+	       			text.append("抱歉！无法获取更详细的信息！\n");		
+	       		}
+	       		else
+	       		{
+	       			text.append("初选：您在 ");
+	       			for(i = 0; i<chosenDatas.size(); i++)
+	       				{
+	       					text.append(i + ": " + chosenDatas.get(i).place + "	");
+	       				}
+	       			chosenData = chosenBuildings.secondChooseFromDatas(sample,chosenDatas);
+	       			if(chosenData.isEmpty())
+	       			{
+	       				text.append("抱歉！无法获取更详细的信息！\n");
+	       			}
+	       			else
+	       			{
+	       				text.append("\n精选：您在 ");
+	       				for(i = 0; i<chosenData.size(); i++)
+	       				{
+	       					text.append(i + ": " + chosenData.get(i).place + "	");
+	       				}
+	       			}
+	       		}
+	    	}
+    	}
+    	
+    	/*
+    	int i = 0, flag = 0;
     	for (i = 0; i < loopTime; i++){
+    		//text.append("i = " + i +"\n");
     		wifi.startScan();
         	scanResultList = wifi.getScanResults();
-        	wifiConfigList = wifi.getConfiguredNetworks();
         	if (i < 5)
         		continue;
-        	if (wifiInfo.get(0).equals(new ArrayList())) {
-        		Log.d("equal", "equal");
-    			wifiInfo.get(0).add(wifi.getConnectionInfo().getBSSID());
-    			wifiInfo.get(1).add(wifi.getConnectionInfo().getMacAddress());
-        	}
-        	
-    		wifiInfo.get(2).add(wifi.getConnectionInfo().getRssi());
-    		wifiInfo.get(3).add(wifi.getConnectionInfo().getLinkSpeed());
-    		for (ScanResult result : scanResultList) {
-    			
+    		for (ScanResult result : scanResultList) {    			
     			if(result.SSID.equals("Tsinghua"))
     			{
     				for(ArrayList l : WifiSum)
@@ -170,40 +257,234 @@ public class HelloWifiActivity extends Activity {
     				flag = 0;
     			}
     		}
-        	
-        	SystemClock.sleep(500);
     	}
-    	//for (ArrayList list : wifiInfo)
-    		//text.append(list.toString());
-    	buttonScan.setEnabled(false);
-    	
-    	//以下是查找教室的代码
-    	Data sample = new Data();
-    	sample  = Calculate.getSampleData(WifiSum);
-    	Building chosenBuildings = new Building();
-    	ArrayList<Data> chosenDatas = new ArrayList<Data>();
-    	//Data chosenData = new Data();
-    	ArrayList<Data> chosenData = new ArrayList<Data>();
-    	
-    	chosenBuildings = School.chooseFromBuildings(sample.BSSIDStrongest[0]);
-    	text.append( "\nThe strongest BSSID is " + sample.BSSIDStrongest[0]+"\n");
-    	text.append("教学楼：您在 " + chosenBuildings.name+"\n");
-    	//text.append("您在 " + School.test_chooseFromBuildings(sample.BSSIDStrongest[0])+"\n");
-    	chosenDatas = chosenBuildings.firstChooseFromDatas(sample);
-    	text.append("初选：您在 ");
-    	for(i = 0; i<chosenDatas.size(); i++)
-    	{
-    		text.append(i + ": " + chosenDatas.get(i).place + "	");
-    	}
-    	chosenData = chosenBuildings.secondChooseFromDatas(sample,chosenDatas);
-    	text.append("\n精选：您在 ");
-    	for(i = 0; i<chosenData.size(); i++)
-    	{
-    		text.append(i + ": " + chosenData.get(i).place + "	");
-    	}
-
-    	
+    	*/
     }
+    
+    public void scanWifi(View v) {
+    	int i = 0, waitNum = 0;
+    	int flag = 0;
+    	int connectNum = 0;
+    	
+    	//text.append("Hi2!\n");		
+    	
+    	wifi.setWifiEnabled(false);
+    	wifi.setWifiEnabled(true);
+    	while (!wifi.isWifiEnabled());
+    	
+    	SystemClock.sleep(10000);
+    	wifiInfo.clear();
+    	//text.append(wifi.getScanResults().toString());
+    	for (int j = 0; j < 4; j++)
+    		wifiInfo.add(new ArrayList());
+    	
+    	progressBar.setVisibility(1);
+    	handler = new Handler() {
+    		@Override
+    		public void handleMessage(Message msg) {
+    			text.append("from handler");
+    			doScan();
+    		}
+    	};
+    	
+    	
+    	new Thread(new Runnable() {
+
+			public void run() {
+				int i = 0, flag = 0;
+				// TODO Auto-generated method stub
+				while (status < loopTime) {
+					try {
+						Thread.sleep(300);
+						wifi.startScan();
+			        	scanResultList = wifi.getScanResults();
+			        	for (ScanResult result : scanResultList) {    			
+			    			if(result.SSID.equals("Tsinghua"))
+			    			{
+			    				for(ArrayList l : WifiSum)
+			    				{
+			    					if(l.get(0).equals(result.BSSID))
+			    					{
+			    						l.add(result.level);
+			    						flag = 1;
+			    					}
+			    				}
+			    				if(flag == 0)
+			    				{
+			    					flag = WifiSum.size();
+			    					WifiSum.add(new ArrayList());
+			    					WifiSum.get(flag).add(result.BSSID);
+			    					WifiSum.get(flag).add(result.level);
+			    				}
+			    				flag = 0;
+			    			}
+			    		}
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					status++;
+					handler.post(new Runnable() {
+						public void run() {
+							progressBar.setProgress(status);
+						}
+					});
+				}
+				handler.sendMessage(handler.obtainMessage());
+				//doScan();
+			}
+        	
+        }).start();
+    	
+    	/*
+    	new Thread(new Runnable() {
+
+			public void run() {
+				// TODO Auto-generated method stub
+				int i = 0, flag = 0;
+				text.append("enter run");
+				while (status < loopTime) {
+					try {
+						//text.append("" + status);
+						Thread.sleep(300);
+						
+						wifi.startScan();
+			        	scanResultList = wifi.getScanResults();
+			        	if (i < 5) ##
+			        		continue;  ##
+			    		for (ScanResult result : scanResultList) {    			
+			    			if(result.SSID.equals("Tsinghua"))
+			    			{
+			    				for(ArrayList l : WifiSum)
+			    				{
+			    					if(l.get(0).equals(result.BSSID))
+			    					{
+			    						l.add(result.level);
+			    						flag = 1;
+			    					}
+			    				}
+			    				if(flag == 0)
+			    				{
+			    					flag = WifiSum.size();
+			    					WifiSum.add(new ArrayList());
+			    					WifiSum.get(flag).add(result.BSSID);
+			    					WifiSum.get(flag).add(result.level);
+			    				}
+			    				flag = 0;
+			    			}
+			    		}
+						
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					status++;
+					handler.post(new Runnable() {
+						public void run() {
+							progressBar.setProgress(status);
+						}
+					});
+				}
+			}
+        }).start();
+    	*/
+    	
+    	/*
+    	for (i = 0; i < loopTime; i++){
+    		//text.append("i = " + i +"\n");
+    		wifi.startScan();
+        	scanResultList = wifi.getScanResults();
+        	if (i < 5)
+        		continue;
+    		for (ScanResult result : scanResultList) {  
+    			//text.append(result.SSID);
+    			if(result.SSID.equals("Tsinghua"))
+    			{
+    				//text.append("equals");
+    				for(ArrayList l : WifiSum)
+    				{
+    					if(l.get(0).equals(result.BSSID))
+    					{
+    						l.add(result.level);
+    						flag = 1;
+    					}
+    				}
+    				if(flag == 0)
+    				{
+    					flag = WifiSum.size();
+    					WifiSum.add(new ArrayList());
+    					WifiSum.get(flag).add(result.BSSID);
+    					WifiSum.get(flag).add(result.level);
+    				}
+    				flag = 0;
+    			}
+    		}
+        	
+        	SystemClock.sleep(300);
+    	}
+    	//buttonScan.setEnabled(false);
+    	
+    	*/
+    	//while (status != loopTime)
+    	//	;
+    	
+    	/*
+    	//以下是查找教室的代码
+    	if(WifiSum.size()<1)
+    	{
+    		text.append( "抱歉,您所在的地点无定位所需wifi！\n" + WifiSum.size());
+    	}
+    	else
+    	{
+	    	text.append( WifiSum.get(0)+"\n");
+	    	Data sample = new Data();
+	    	sample  = Calculate.getSampleData(WifiSum);
+	    	Building chosenBuildings = new Building();
+	    	ArrayList<Data> chosenDatas = new ArrayList<Data>();
+	    	//Data chosenData = new Data();
+	    	ArrayList<Data> chosenData = new ArrayList<Data>();
+	    	
+	    	chosenBuildings = School.chooseFromBuildings(sample.BSSIDStrongest[0]);
+	    	if(chosenBuildings.name == null)
+	    	{
+	    		text.append( "抱歉！您所在的地点不在数据库中！\n");
+	    	}
+	    	else{
+	    		//text.append( "\nThe strongest BSSID is " + sample.BSSIDStrongest[0]+"\n");
+	       		text.append("教学楼：您在 " + chosenBuildings.name+"\n");
+	       		//text.append("您在 " + School.test_chooseFromBuildings(sample.BSSIDStrongest[0])+"\n");
+	       		chosenDatas = chosenBuildings.firstChooseFromDatas(sample);
+	       		if(chosenDatas.isEmpty())
+	       		{
+	       			text.append("抱歉！无法获取更详细的信息！\n");		
+	       		}
+	       		else
+	       		{
+	       			text.append("初选：您在 ");
+	       			for(i = 0; i<chosenDatas.size(); i++)
+	       				{
+	       					text.append(i + ": " + chosenDatas.get(i).place + "	");
+	       				}
+	       			chosenData = chosenBuildings.secondChooseFromDatas(sample,chosenDatas);
+	       			if(chosenData.isEmpty())
+	       			{
+	       				text.append("抱歉！无法获取更详细的信息！\n");
+	       			}
+	       			else
+	       			{
+	       				text.append("\n精选：您在 ");
+	       				for(i = 0; i<chosenData.size(); i++)
+	       				{
+	       					text.append(i + ": " + chosenData.get(i).place + "	");
+	       				}
+	       			}
+	       		}
+	    	}
+    	}
+    	
+    	*/
+    }
+
     
     public void write(View v) {
     	location = et.getText().toString();
@@ -211,6 +492,7 @@ public class HelloWifiActivity extends Activity {
     		Toast.makeText(getApplicationContext(), "请输入地点", Toast.LENGTH_SHORT).show();
     	else {
     	Write writeFunction = new Write();
+    	Log.d("location", location);
     	writeFunction.Write(WifiSum, wifiInfo, HelloWifiActivity.this, location);    	
     	
     	WifiSum.clear();
@@ -321,6 +603,7 @@ public class HelloWifiActivity extends Activity {
     	menu.add(Menu.NONE, MENU_CLOSE, Menu.NONE, "close");
     	menu.add(Menu.NONE, MENU_CHANGE, Menu.NONE, "Change");
     	menu.addSubMenu(Menu.NONE, MENU_EDIT, Menu.NONE, "edit");
+    	menu.add(Menu.NONE, MENU_HELP, Menu.NONE, "help");
     	return super.onCreateOptionsMenu(menu);
     }
     @Override
@@ -331,7 +614,6 @@ public class HelloWifiActivity extends Activity {
     		super.finish();
     		return true;
     	case MENU_CHANGE:
-    	{
     		AlertDialog loopDialog = new AlertDialog.Builder(this).create();
     		editText = new EditText(this);
     		loopDialog.setView(editText);
@@ -353,8 +635,22 @@ public class HelloWifiActivity extends Activity {
     		loopDialog.setMessage("choose scan time");
     		//dialog.setView(editText);
     		loopDialog.show();
-    		}
     		return true;
+    	case MENU_EDIT:
+    		StoreFile storeFile = new StoreFile();
+       	 	storeFile.method(HelloWifiActivity.this, false);
+       	 	//storeFile.write(HelloWifiActivity.this);
+       	 	return true;
+    	case MENU_HELP:
+    		AlertDialog helpDialog = new AlertDialog.Builder(this).create();
+    		TextView tv = new TextView(this);
+    		tv.append(help);
+    		//helpDialog.setView(tv);
+    		helpDialog.setTitle("Help");
+    		helpDialog.setMessage(help);
+    		helpDialog.show();
+    		return true;
+    		
     		
     	}
     	return super.onOptionsItemSelected(item);

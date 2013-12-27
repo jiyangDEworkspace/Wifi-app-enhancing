@@ -4,7 +4,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class Calculate {
-	public static int time = 20;//扫描次数
+	public static int time = HelloWifiActivity.loopTime;//扫描次数
+	public static int levelnum = 3;//强度等级数目
 	
 	//获取强度平均值的绝对值(3位小数),参数为强度值数组
 	public static float getMean(int RSS[]){
@@ -28,11 +29,11 @@ public class Calculate {
 		return Float.parseFloat((new DecimalFormat("00.000").format(Math.sqrt(var / len))));
 	}
 	
-	//获取接收信号难度，即接收到次数占总扫描次数比值(2位小数)按0.2为等级分级别为1~5级，5级
+	//获取接收信号难度，即接收到次数占总扫描次数比值(2位小数)分级别为1~levelnum级，levelnum级
 	//为强度最高，参数为接收到次数
 	public static int getDifficultyOfReceiving(int len){
-		int level = 1 + (int)((float)(len / time)*5);
-		return level > 5?5:level;
+		int level = 1 + (int)((float)len / time*levelnum);
+		return level > levelnum?levelnum:level;
 		
 	}
 	
@@ -59,7 +60,7 @@ public class Calculate {
 	}
 	
 	//获取不同BSSID匹配个数，参数为库中BSSID的String数组和样本BSSID的String数组
-	public static int getMatchingNumber(String L_BSS[], String S_BSS[]){
+	/*public static int getMatchingNumber(String L_BSS[], String S_BSS[]){
 		int num = 0;
 		for(int i = 0; i < S_BSS.length; i ++){
 			for(int j = 0; j < L_BSS.length; j ++){
@@ -70,19 +71,31 @@ public class Calculate {
 			}
 		}
 		return num;
-	}
+	}*/
 	
 	//获取最强信号所对应的MAC地址，参数为样本Data
-	public static String getStrongest(Data d){
-		int i, strongest = 0;
+	public static String[] getStrongest(Data d){
+		int i, index = 0, first = 0;
 		float tmp = (float) 200.0;
+		String[] strongest = new String[2];
 		for(i = 0; i < d.BSSIDs.size(); i ++){
 			if( d.BSSIDs.get(i).strengthAverage < tmp){
-				strongest = i;
+				index = i;
 				tmp = d.BSSIDs.get(i).strengthAverage;
 			}
 		}
-		return d.BSSIDs.get(strongest).name;
+		first = index;
+		strongest[0] = d.BSSIDs.get(index).name;
+		tmp = (float) 200.0;
+		for(i = 0; i < d.BSSIDs.size(); i ++){
+			if( d.BSSIDs.get(i).strengthAverage < tmp && i != first){
+				index = i;
+				tmp = d.BSSIDs.get(i).strengthAverage;
+			}
+		}
+		strongest[1] = d.BSSIDs.get(index).name;
+		System.out.println(strongest[0]+", "+strongest[1]);
+		return strongest;
 	}
 	
 	//获取样本Data，参数为WifiSum
@@ -97,7 +110,7 @@ public class Calculate {
 			sd.BSSIDs.add(new BSSID((String)WifiSum.get(i).get(0), mean, getVariance(RSS, mean),
 					getDifficultyOfReceiving(RSS.length),getRangeOfVariation(RSS)));
 		}
-		sd.BSSIDStrongest[0] = getStrongest(sd);
+		sd.BSSIDStrongest = getStrongest(sd);
 		sd.BSSIDNum = WifiSum.size();
 		return sd;
 	}

@@ -1,102 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical" 
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent"
-  >
-  <LinearLayout
-    android:orientation="horizontal"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-  	android:layout_height="wrap_content"
-  	>
-    <Button
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/buttonStart"
-    android:text="StartWifi"
-    android:onClick="startingWifi"
-    android:layout_weight="1"
-    android:gravity="center_horizontal"
-    />
+    android:layout_height="fill_parent"
+    android:background="@drawable/blue" >
+
+    <EditText
+        android:id="@+id/et"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/et"
+        android:visibility="gone" />
 
     <Button
-    android:id="@+id/buttonStop"
-    android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:layout_weight="1"
-	android:gravity="center_horizontal"
-	android:onClick="stoppingWifi"
-	android:text="StopWifi"
-	/>
+        android:id="@+id/buttonStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="107dp"
+        android:layout_marginLeft="27dp"
+        android:drawableTop="@drawable/wifi"
+        android:onClick="startingWifi"
+        android:text="turn on"
+        android:background="#00000000"
+        android:textSize="15dip"
+        android:textColor="#F8F8FF"
+        android:shadowColor="#EEEE00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="1" />
 
-  </LinearLayout>
-  <LinearLayout 
-	android:orientation="horizontal"
-    android:layout_width="fill_parent"
-  	android:layout_height="wrap_content"
-	>
-  <Button
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/buttonCheck"
-    android:text="CheckWifi"
-    android:onClick="checkingWifi"
-	android:layout_weight="1"
-      />
-  <Button
-	android:id="@+id/buttonScan"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:onClick="scanWifi"
-	android:text="Scan"
-	android:layout_weight="1"
-	 />	    
-	    
-	    
-  </LinearLayout>
-  <LinearLayout 
-    android:orientation="horizontal"
-    android:layout_width="fill_parent"
-  	android:layout_height="wrap_content"
-    >
-  <Button
-	android:id="@+id/buttonWrite"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:onClick="write"
-	android:text="write to file"
-	android:layout_weight="1"
-	
-	 />
-  <Button 
-	android:id="@+id/buttonconnect"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:onClick="connect"
-	android:text="connect network"
-	android:layout_weight="1"
-	/>  
-      
-      
-  </LinearLayout>
-  <EditText 
-    android:id="@+id/et"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:selectAllOnFocus="false"
-      />
-  
-       
-  <ScrollView 
-    android:id="@+id/ScrollView01"
-    android:layout_width="wrap_content" 
-    android:layout_height="wrap_content">
-    <TextView 
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content" 
-      android:id="@+id/text"
-      android:text="HelloWifi" />
-  </ScrollView>
+    <Button
+        android:id="@+id/buttonScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonStart"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="59dp"
+        android:drawableTop="@drawable/radar"
+        android:onClick="scanWifi"
+        android:text="Scan"
+        android:background="#00000000"
+        android:textSize="25dip"
+        android:textColor="#F8F8FF"
+        android:shadowColor="#EEEE00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="1"
+        />
 
+    <Button
+        android:id="@+id/buttonWrite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/buttonScan"
+        android:layout_marginRight="28dp"
+        android:drawableTop="@drawable/save"
+        android:onClick="write"
+        android:text="save"
+        android:background="#00000000"
+        android:textSize="15dip"
+        android:textColor="#F8F8FF"
+        android:shadowColor="#EEEE00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="1" />
 
-</LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/buttonStart"
+        android:layout_centerHorizontal="true"
+        android:background="#00000000"
+        android:drawableTop="@drawable/address_book"
+        android:text="address"
+        android:textSize="15dip"
+        android:textColor="#F8F8FF"
+        android:shadowColor="#EEEE00"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="1" />
+
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonScan"
+        android:layout_alignLeft="@+id/buttonStart"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/buttonWrite"
+        android:layout_marginTop="18dp"
+        android:scrollbars="vertical"
+         >
+    </TextView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonStart"
+        android:layout_alignLeft="@+id/buttonStart"
+        android:layout_alignRight="@+id/buttonWrite"
+        android:layout_marginBottom="14dp"
+        android:visibility="gone" />
+    
+</RelativeLayout>

@@ -10,19 +10,15 @@ public class Data
 	public String[] BSSIDStrongest = {"",""};
 	public BSSIDConnected BSSIDConnected = new BSSIDConnected() ;
 
-	public Data(String pl, int bssn, String str, String n){
+	public Data(String pl, int bssn, String str1,   String str2, ArrayList<BSSID> bssids, BSSIDConnected bsc){
 		place = pl;
 		BSSIDNum = bssn;
-		BSSIDStrongest[0] = str;
-		BSSIDConnected.name = n;
-	}
-	public Data(String pl, int bssn, String str){
-		place = pl;
-		BSSIDNum = bssn;
-		BSSIDStrongest[0] = str;
+		BSSIDStrongest[0] = str1;
+		BSSIDStrongest[1] = str2;
+		BSSIDs = bssids;
+		BSSIDConnected = bsc;
 	}
 	public Data(){
-		this("",0,"","");
 	}
 	
 	//得到两个Data的相匹配的BSSID的个数
@@ -71,6 +67,10 @@ public class Data
 			{
 				if(sample.BSSIDs.get(j).name.equals(BSSIDs.get(i).name)  && sample.BSSIDs.get(j).difficultyLevel == BSSIDs.get(i).difficultyLevel)
 				{
+					if(place.equals("1109") || place.equals("1111"))
+					{
+						Recorder.recorder("\n" + place + " sample: " + sample.BSSIDs.get(j).name + sample.BSSIDs.get(j).difficultyLevel + "\t\tdata: " + BSSIDs.get(i).name + BSSIDs.get(i).difficultyLevel);
+					}
 					num ++;
 					break;
 				}
@@ -110,7 +110,7 @@ public class Data
 	//得到是否有特征BSSID与初选结果的data相匹配,所给分数待调,可能分值要较高
 	public int getStrongestBSSIDMatching(Data sample)
 	{
-		int matchingScore = 0;
+		/*
 		if(!BSSIDStrongest[0].equals("") && !sample.BSSIDStrongest[0].equals(""))
 		{
 			if(getStrengthAverage(BSSIDStrongest[0]) < 75)
@@ -128,6 +128,30 @@ public class Data
 					{
 						matchingScore += 1;
 					}					
+				}
+			}
+		}
+		*/
+		int matchingScore = 0;
+		if(!BSSIDStrongest[0].equals("") && !sample.BSSIDStrongest[0].equals(""))
+		{
+			if(sample.getStrengthAverage(BSSIDStrongest[0]) < 70)//测试点有路由
+			{
+				if(sample.BSSIDStrongest[0].equals(BSSIDStrongest[0]) && getStrengthAverage(BSSIDStrongest[0]) < 70)
+					matchingScore += 3;
+			}
+			else 
+			{	
+				if(!BSSIDStrongest[1].equals("") && !sample.BSSIDStrongest[1].equals(""))
+				{
+					if(sample.getStrengthAverage(BSSIDStrongest[0]) < 80 && sample.getStrengthAverage(BSSIDStrongest[0]) > 75)//测试点无路由
+					{
+						if((sample.BSSIDStrongest[0].equals(BSSIDStrongest[0]) && sample.BSSIDStrongest[1].equals(BSSIDStrongest[1]))	|| (sample.BSSIDStrongest[0].equals(BSSIDStrongest[1]) && sample.BSSIDStrongest[1].equals(BSSIDStrongest[0])))
+						{							
+							if(getStrengthAverage(BSSIDStrongest[0]) < 80 && getStrengthAverage(BSSIDStrongest[0]) > 75 && getStrengthAverage(BSSIDStrongest[1]) < 86 && getStrengthAverage(BSSIDStrongest[1]) > 78 && sample.getStrengthAverage(BSSIDStrongest[1]) < 86 && sample.getStrengthAverage(BSSIDStrongest[1]) > 78)
+								matchingScore += 3;
+						}
+					}
 				}
 			}
 		}

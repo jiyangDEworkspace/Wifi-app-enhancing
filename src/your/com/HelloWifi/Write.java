@@ -59,23 +59,12 @@ public class Write{
             
             if (wifiInfo.size() >= 1){
             	Log.d("wifiinfo", "enter");
-            	os.write(("\nbsc.name = \"" + wifiInfo.get(0).get(0).toString() + "\";\n").getBytes());
+            	os.write(("\nbsc.name = \"ff:ff:ff:ff:ff:ff\";\n").getBytes());
 	            os.write(("int RSS_con[] = new int[]{").getBytes());
-	            os.write(wifiInfo.get(2).get(0).toString().getBytes());
-	            for (int j = 1; j < wifiInfo.get(2).size(); j++)
-	            	os.write(("," + wifiInfo.get(2).get(j).toString()).getBytes());
-	            os.write("};\n".getBytes());
+	            os.write("0};\n".getBytes());
 	            os.write("int Linkspeed[] = new int[]{".getBytes());
-	            os.write(wifiInfo.get(3).get(0).toString().getBytes());
-	            for (int j = 1; j < wifiInfo.get(3).size(); j++)
-	            	os.write(("," + wifiInfo.get(3).get(j).toString()).getBytes());
-	            os.write("};\n".getBytes());
-	            /*
-	            os.write(("BSSID:" + wifiInfo.get(0).toString()).getBytes());
-	            os.write(("\nMAC:" + wifiInfo.get(1).toString()).getBytes());
-	            os.write(("\nRSSI:" + wifiInfo.get(2).toString()).getBytes());
-	            os.write(("\nLink Speed:" + wifiInfo.get(3).toString()).getBytes());
-	            */
+	            os.write("0};\n".getBytes()); 
+	           
 	            os.close();
 	            
             }

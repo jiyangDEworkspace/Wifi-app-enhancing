@@ -2,6 +2,22 @@
 <resources>
 
     <string name="hello">Hello World, HelloWifiActivity!</string>
-    <string name="app_name">Wifi_Artemis</string>
-
+    <string name="app_name">Wifi.Hephaestus</string>
+	<string name="help">1.to edit key, choose "edit" in menu.
+	    2.send "key" to your phone to start Wi-Fi locating.
+			3.send "key.gps" to your phone to start GPS locating.
+			4.send "key.ring" to make your phone ring in the loudest sound possible. (notice: the ring tone is phone"s default ring tone)
+			5.need further help, please send email to jedichen121@yahoo.com
+			</string>
+			
+	<string name="function">本软件用于寻回丢失的手机，具备功能如下：
+1、基于Wi-­‐Fi 定位：用户发送密码到丢失的手机上，手机会自动断开（如果已
+经开启）、重连Wi-Fi，搜索一段时间后在数据库中进行查找，返回手机所在教
+室信息。
+2、基于GPS 定位：用户发送密码.gps 到丢失的手机上，手机收到短信后会自动
+使用GPS 定位功能开始定位，以短信的形式返回一个google 地图网址，用户可
+以查看手机所在位置。为了确保GPS 能够正常工作，请用户在安装软件后打开手
+机的GPS 定位功能。
+3、响铃功能：用户发送密码.ring 到手机上，手机随即会以最大铃声响铃，避
+免了手机丢失时被设为静音状态所带来的麻烦。</string>
 </resources>
