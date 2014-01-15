@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <ImageView
+        android:id="@+id/imageNone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/translucent" />
+    
+    <!-- <TextView 
+        android:id="@+id/resultText1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/imageNone"
+        android:layout_below="@id/imageNone"
+        android:gravity="left"
+        android:textSize="20dip"
+        android:textColor="#8E8E8E"
+        android:fontFamily="sans-serif"
+		android:text="@string/displayResut"
+        /> -->
+    
+    <TextView 
+        android:id="@+id/resultText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/imageNone"
+        android:layout_below="@id/imageNone"
+        android:gravity="left"
+        android:textSize="20dip"
+        android:fontFamily="sans-serif"
+		android:text="@string/displayResut"
+        />
+    
+    <EditText 
+        android:id="@+id/editSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/resultText2"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:textSize="20dip"
+        android:fontFamily="sans-serif"
+        android:hint="Enter adress here"
+        
+        
+        />
+    
+    <Button 
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/editSave"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:textSize="20dip"
+        android:fontFamily="sans-serif"
+        android:text="Save scan result"
+        android:onClick="Write"
+        />
+
+</RelativeLayout>

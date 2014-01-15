@@ -2,6 +2,42 @@
 <resources>
 
     <string name="hello">Hello World, HelloWifiActivity!</string>
-    <string name="app_name">HelloWifi</string>
+    <string name="app_name">Wifi.Hermes</string>
+    <string name="writeaddress">Address</string>
+    <string name="helpE">1. To use wifi locating, send key to your phone\n
+			2. To start GPS locating, send key + ".gps" to your phone\n
+			3. To make your phone ring, send key + ".ring" to your phone\n
+			4. To change key, choose Security in settings\n
+			5. Need further help, please send email to jedichen121@yahoo.com
+			</string>
+    <string name="helpC">1.丢失手机后：\n发送设定的密码key进行wifi定位；发送key.gps进行GPS定位；发送key.ring进行声音定位\n
+			2.修改密码：点击菜单中的edit\n
+			3.修改扫描次数：点击菜单中的change，默认为20次\n
+			4.添加数据库：点击scan按钮，可点击save按钮进行数据保存\n
+			5.删除数据库：点击address按钮进行管理，删除不需要的数据\n
+			6.开闭wifi功能：点击turn on/off按钮\n</string>
+    <string name="displayResut">\n
+	    Category:\n
+	    Level1:\n
+	    Level2:\n
+	    Level3:</string>
+    <string name="scan">Touch to Scan</string>
+    <string name="menu_settings">Settings</string>
+    <string name="home">Go home</string>
+    <string name="new_fragment">Add new</string>
+    <string name="delete_fragment">Pop top</string>
+    <string name="function">本软件用于寻回丢失的手机，具备功能如下：
+1、基于Wi-­‐Fi 定位：用户发送密码到丢失的手机上，手机会自动断开（如果已
+经开启）、重连Wi-Fi，搜索一段时间后在数据库中进行查找，返回手机所在教
+室信息。
+2、基于GPS 定位：用户发送密码.gps 到丢失的手机上，手机收到短信后会自动
+使用GPS 定位功能开始定位，以短信的形式返回一个google 地图网址，用户可
+以查看手机所在位置。为了确保GPS 能够正常工作，请用户在安装软件后打开手
+机的GPS 定位功能。
+3、响铃功能：用户发送密码.ring 到手机上，手机随即会以最大铃声响铃，避
+免了手机丢失时被设为静音状态所带来的麻烦。</string>
+    <string name="title_activity_setting">SettingActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
